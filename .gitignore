@@ -1,0 +1,8 @@
+build/
+.gradle/
+mode/
+examples/*/build/
+*.class
+*.jar
+__pycache__/
+*.pyc
