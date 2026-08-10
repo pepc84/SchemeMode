@@ -56,7 +56,7 @@ def p_draw(p):
 
 # scm:19
 def setup():
-    return size(800, 600)
+    size(800, 600)
 
 # scm:21
 def draw():
@@ -75,7 +75,12 @@ def draw():
 def mouse_pressed():
     global ps
     # scm:28
-    return None
+    def loop(i):
+        # scm:29
+        if (i < 15):
+            ps = ([make_p(mouse_x, mouse_y)] + ps)
+            loop((i + 1))
+    loop(0)
 
 
 run()

@@ -218,7 +218,20 @@ public class Transpiler {
     }
 
     private void emitBody(List<SExpr> body, int ind, boolean noReturn) throws SchemeException {
-        emitBody(body, ind, false);
+        if (body.isEmpty()) { indent(ind); emit("pass\n"); return; }
+        for (int i = 0; i < body.size() - 1; i++) {
+            marker(body.get(i).line(), ind);
+            emitStmt(body.get(i), ind);
+        }
+        SExpr last = body.get(body.size() - 1);
+        marker(last.line(), ind);
+        if (!noReturn && (isSimple(last) || last.isForm("if") || last.isForm("cond") ||
+            last.isForm("let") || last.isForm("let*") || last.isForm("letrec") ||
+            last.isForm("and") || last.isForm("or") || last.isForm("begin"))) {
+            indent(ind); emit("return "); emitExpr(last, ind); emit("\n");
+        } else {
+            emitStmt(last, ind);
+        }
     }
 
     
