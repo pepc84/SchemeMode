@@ -28,10 +28,10 @@ public class SchemeMode extends Mode {
         return new SchemeEditor(base, path, state, this);
     }
 
-    public SchemeRunner handleLaunch(Sketch sketch, RunnerListener listener) {
+    public SchemeRunner handleLaunch(Sketch sketch, RunnerListener listener, SchemeEditor editor) {
         SchemeBuild build = new SchemeBuild(sketch, this);
         if (!build.prepare(listener)) return null;
-        SchemeRunner runner = new SchemeRunner(build, listener);
+        SchemeRunner runner = new SchemeRunner(build, listener, editor);
         new Thread(runner::launch, "scheme-runner").start();
         return runner;
     }

@@ -74,7 +74,7 @@ public class SchemeEditor extends Editor {
         }
         statusNotice("Running...");
         new Thread(() -> {
-            currentRunner = mode.handleLaunch(sketch, makeListener());
+            currentRunner = mode.handleLaunch(sketch, makeListener(), this);
             if (currentRunner == null) {
                 EventQueue.invokeLater(this::deactivateRun);
             }
@@ -99,8 +99,9 @@ public class SchemeEditor extends Editor {
                 PdeTextArea pta = (PdeTextArea) textarea;
                 try {
                     int docLine = err.line - 1;
+                    if (docLine >= pta.getLineCount()) return;
                     pta.clearGutterText();
-                    pta.setGutterText(docLine, "▶");
+                    pta.setGutterText(docLine, "\u25b6");
                     pta.scrollTo(docLine, 0);
                     pta.select(
                         pta.getLineStartOffset(docLine),

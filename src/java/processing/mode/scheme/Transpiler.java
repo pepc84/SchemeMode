@@ -835,8 +835,28 @@ public class Transpiler {
         while (cur instanceof SExpr.Pair pp) { collectSetTargets(pp.car(), targets); cur = pp.cdr(); }
     }
 
+    /** Convert camelCase to kebab-case: mouseX -> mouse-x, noFill -> no-fill */
+    static String camelToKebab(String name) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            if (Character.isUpperCase(c) && i > 0) {
+                sb.append('-');
+                sb.append(Character.toLowerCase(c));
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
     static String snake(String name) {
         if (name == null) return "_";
+        // Normalize camelCase to kebab-case first (mouseX -> mouse-x)
+        // Only if the name contains uppercase letters (is camelCase)
+        if (name.chars().anyMatch(Character::isUpperCase)) {
+            name = camelToKebab(name);
+        }
         return switch (name) {
             case "display" -> "print"; case "length" -> "len";
             default -> {

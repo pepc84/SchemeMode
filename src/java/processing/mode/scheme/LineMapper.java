@@ -41,7 +41,13 @@ public class LineMapper {
         String errorType = null, errorMsg = null;
         for (String line : lines) {
             Matcher m = TB_FILE.matcher(line);
-            if (m.find()) { try { lastPyLine = Integer.parseInt(m.group(2)); } catch (NumberFormatException ignored) {} }
+            if (m.find()) {
+                String file = m.group(1);
+                // Use any .py frame - the last one in the sketch is what we want
+                if (file.endsWith(".py")) {
+                    try { lastPyLine = Integer.parseInt(m.group(2)); } catch (NumberFormatException ignored) {}
+                }
+            }
             Matcher em = ERR_LINE.matcher(line.trim());
             if (em.matches()) { errorType = em.group(1); errorMsg = em.group(2).trim(); }
         }
