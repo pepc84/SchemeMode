@@ -6,3 +6,5 @@ examples/*/build/
 *.jar
 __pycache__/
 *.pyc
+build/
+.gradle/
