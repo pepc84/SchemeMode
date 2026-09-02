@@ -25,6 +25,8 @@ public class SchemeRunner {
             pb.environment().put("RUST_LOG", "error");
             pb.environment().put("BEVY_LOG", "error");
             pb.environment().put("WGPU_LOG", "error");
+            pb.environment().put("BEVY_ASSET_LOG", "error");
+            pb.environment().put("RUST_LOG_STYLE", "never");
             pb.environment().put("DISPLAY", System.getenv().getOrDefault("DISPLAY", ":0"));
             pb.environment().put("GDK_BACKEND", "x11");
             pb.environment().put("QT_QPA_PLATFORM", "xcb");
@@ -37,7 +39,8 @@ public class SchemeRunner {
             if (!stopping && code != 0 && stderrBuf.length() > 0) {
                 SchemeError err = lineMapper.parseTraceback(
                     stderrBuf.toString(), launch.sketchFileName);
-                listener.statusError(err.toString());
+                if (editor != null) editor.reportError(err);
+                else listener.statusError(err.toString());
             } else if (!stopping && code != 0) {
                 listener.statusError("Sketch exited with code " + code);
             }

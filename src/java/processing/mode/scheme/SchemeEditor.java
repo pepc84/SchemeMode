@@ -12,6 +12,7 @@ import processing.app.ui.*;
 public class SchemeEditor extends Editor {
 
     private SchemeRunner currentRunner;
+    private SchemeLinter  linter;
 
     public SchemeEditor(Base base, String path,
                         EditorState state, Mode mode) throws EditorException {
@@ -21,8 +22,30 @@ public class SchemeEditor extends Editor {
     // ── Text area with PdeTextArea for line numbers + gutter ─────────────────
     @Override
     protected JEditTextArea createTextArea() {
-        return new PdeTextArea(new PdeTextAreaDefaults(),
+        PdeTextArea pta = new PdeTextArea(new PdeTextAreaDefaults(),
                                new SchemeInputHandler(this), this);
+        EventQueue.invokeLater(() -> {
+            linter = new SchemeLinter(SchemeEditor.this);
+            getTextArea().getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+                void run() {
+                    if (linter != null)
+                        linter.scheduleCheck(sketch, sketch.getCurrentCodeIndex(), getText());
+                }
+                public void insertUpdate(javax.swing.event.DocumentEvent e) { run(); }
+                public void removeUpdate(javax.swing.event.DocumentEvent e) { run(); }
+                public void changedUpdate(javax.swing.event.DocumentEvent e) { run(); }
+            });
+            errorOverlay = new ErrorOverlay(pta);
+            pta.getPainter().setLayout(null);
+            pta.getPainter().add(errorOverlay);
+            pta.getPainter().addComponentListener(new java.awt.event.ComponentAdapter() {
+                public void componentResized(java.awt.event.ComponentEvent e) {
+                    errorOverlay.setBounds(0, 0,
+                        pta.getPainter().getWidth(), pta.getPainter().getHeight());
+                }
+            });
+        });
+        return pta;
     }
 
     // ── Required abstract overrides (exact CppEditor pattern) ─────────────────
@@ -39,6 +62,7 @@ public class SchemeEditor extends Editor {
     @Override
     public void internalCloseRunner() {
         if (currentRunner != null) { currentRunner.stop(); currentRunner = null; }
+        setProblemList(new java.util.ArrayList<>());
     }
 
     // ── Menus ─────────────────────────────────────────────────────────────────
@@ -101,7 +125,8 @@ public class SchemeEditor extends Editor {
                     int docLine = err.line - 1;
                     if (docLine >= pta.getLineCount()) return;
                     pta.clearGutterText();
-                    pta.setGutterText(docLine, "\u25b6");
+                    pta.setGutterText(docLine, processing.app.syntax.PdeTextArea.STEP_MARKER);
+                    pta.getPainter().repaint();
                     pta.scrollTo(docLine, 0);
                     pta.select(
                         pta.getLineStartOffset(docLine),
@@ -116,6 +141,7 @@ public class SchemeEditor extends Editor {
     }
 
     void clearErrorHighlight() {
+        if (errorOverlay != null) errorOverlay.clear();
         if (textarea instanceof PdeTextArea) {
             ((PdeTextArea) textarea).clearGutterText();
         }
@@ -178,4 +204,31 @@ public class SchemeEditor extends Editor {
             @Override public void stopIndeterminate()      { }
         };
     }
+    // ── Error overlay (draws directly on painter, no debugger required) ────
+    private ErrorOverlay errorOverlay;
+
+    private class ErrorOverlay extends javax.swing.JPanel {
+        private int errorLine = -1;
+        ErrorOverlay(processing.app.syntax.JEditTextArea ta) {
+            setOpaque(false);
+            setLayout(null);
+        }
+        void setErrorLine(int line) { this.errorLine = line; repaint(); }
+        void clear() { this.errorLine = -1; repaint(); }
+        @Override protected void paintComponent(java.awt.Graphics g) {
+            super.paintComponent(g);
+            if (errorLine < 0 || !(textarea instanceof processing.app.syntax.PdeTextArea)) return;
+            processing.app.syntax.PdeTextArea pta = (processing.app.syntax.PdeTextArea) textarea;
+            java.awt.Graphics2D g2 = (java.awt.Graphics2D) g;
+            int y = pta.lineToY(errorLine);
+            int h = pta.getPainter().getFontMetrics().getHeight();
+            g2.setColor(new java.awt.Color(255, 0, 0, 40));
+            g2.fillRect(processing.app.ui.Editor.LEFT_GUTTER, y, getWidth(), h);
+            g2.setColor(new java.awt.Color(255, 60, 60));
+            int ax = processing.app.ui.Editor.LEFT_GUTTER - 12;
+            int ay = y + h/2;
+            g2.fillPolygon(new int[]{ax, ax-6, ax-6}, new int[]{ay, ay-4, ay+4}, 3);
+        }
+    }
+
 }

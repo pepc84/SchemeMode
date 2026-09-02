@@ -110,7 +110,7 @@ public class Parser {
     private Tokenizer.Token consume() { return tokens.get(pos++); }
     private void expect(Tokenizer.TT type, int ln) throws SchemeException {
         Tokenizer.Token t = consume();
-        if (t.type != type) throw new SchemeException("Expected " + type + " got " + t, t.line);
+        if (t.type != type) throw new SchemeException("Expected " + type + " got " + t, ln);
     }
 }
 
