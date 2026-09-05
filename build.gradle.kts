@@ -34,7 +34,6 @@ tasks.register("install") {
     group = "install"
     doLast {
         copy { from(tasks.jar.get().archiveFile); into("$modeDir/mode") }
-        copy { from("resources"); into("$modeDir/resources") }
         copy { from("mode.properties"); into(modeDir) }
         println("Installed to $modeDir")
     }
