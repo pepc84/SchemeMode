@@ -138,7 +138,26 @@ public class Transpiler {
         emit("def cons(h, t): return [h] + list(t)\n");
         emit("def is_null(p): return p == [] or p == ()\n");
         emit("def is_pair(p): return isinstance(p, (list, tuple)) and len(p) > 0\n");
-        emit("def is_list(p): return isinstance(p, (list, tuple))\n\n");
+        emit("def is_list(p): return isinstance(p, (list, tuple))\n");
+        emit("def cadr(p): return p[1]\n");
+        emit("def caddr(p): return p[2]\n");
+        emit("def cadddr(p): return p[3]\n");
+        emit("def caaar(p): return p[0][0][0]\n");
+        emit("def caar(p): return p[0][0]\n");
+        emit("def cadar(p): return p[0][1]\n");
+        emit("def cddr(p): return p[2:]\n");
+        emit("def cdar(p): return p[0][1:]\n");
+        emit("def vector(*args): return list(args)\n");
+        emit("def vector_ref(v, i): return v[i]\n");
+        emit("def vector_set_x(v, i, x): v[i] = x\n");
+        emit("def vector_length(v): return len(v)\n");
+        emit("def make_vector(n, *args): return [args[0] if args else 0]*n\n");
+        emit("def string_length(s): return len(s)\n");
+        emit("def string_ref(s, i): return s[i]\n");
+        emit("def substring(s, a, b): return s[a:b]\n");
+        emit("def string_append(*args): return ''.join(args)\n");
+        emit("def number_to_string(n): return str(n)\n");
+        emit("def string_to_number(s): return float(s)\n\n");
 
         for (SExpr f : forms) {
             if (f.isForm("import")) continue;
