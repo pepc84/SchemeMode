@@ -125,6 +125,13 @@ public class Transpiler {
         emit("    return _random.uniform(args[0], args[1])\n\n");
         emit("def random_gaussian(): return _random.gauss(0, 1)\n\n");
         emit("def noise(*args): return _random.random()\n\n");
+        emit("def text(*args): pass  # not yet in mewnala\n");
+        emit("def text_size(*args): pass  # not yet in mewnala\n");
+        emit("def text_align(*args): pass  # not yet in mewnala\n");
+        emit("def text_leading(*args): pass  # not yet in mewnala\n");
+        emit("def text_width(*args): return 0  # not yet in mewnala\n");
+        emit("def text_ascent(*args): return 0  # not yet in mewnala\n");
+        emit("def text_descent(*args): return 0  # not yet in mewnala\n\n");
 
         for (SExpr f : forms) {
             if (f.isForm("import")) continue;
@@ -377,6 +384,14 @@ public class Transpiler {
             emit("def " + loopName + "(" + String.join(", ", params) + "):\n");
             boolean wi = inFunction; Set<String> wl = new LinkedHashSet<>(localVars);
             inFunction = true; localVars.clear(); localVars.addAll(params);
+            // Hoist globals used in named let body
+            Set<String> loopGlobals = findSetTargets(body);
+            for (String g : loopGlobals) {
+                if (globalVars.contains(g) && !params.contains(g)) {
+                    indent(ind+1); emit("global " + g + "\n");
+                    localVars.add(g);
+                }
+            }
             emitBody(body, ind+1);
             inFunction = wi; localVars.clear(); localVars.addAll(wl);
             indent(ind); emit(loopName + "("); emitArgs(inits, ind); emit(")\n");
@@ -594,9 +609,19 @@ public class Transpiler {
             Transpiler sub = subTx(); sub.emitExpr(bl.size()>1 ? bl.get(1) : new SExpr.Nil(0), ind);
             is.add(sub.out.toString());
         }
-        emit("(lambda " + String.join(", ", ps) + ": ");
-        emitExpr(body.get(body.size()-1), ind);
-        emit(")(" + String.join(", ", is) + ")");
+        if (body.size() == 1) {
+            emit("(lambda " + String.join(", ", ps) + ": ");
+            emitExpr(body.get(0), ind);
+            emit(")(" + String.join(", ", is) + ")");
+        } else {
+            // Multi-body let in expression pos: use a helper function
+            emit("(lambda " + String.join(", ", ps) + ": [");
+            for (int bi = 0; bi < body.size() - 1; bi++) {
+                emitExpr(body.get(bi), ind); emit(", ");
+            }
+            emitExpr(body.get(body.size()-1), ind);
+            emit("][-1])(" + String.join(", ", is) + ")");
+        }
     }
 
     private void emitSetExpr(SExpr.Pair form, int ind) throws SchemeException {

@@ -49,7 +49,9 @@ public class SchemeMode extends Mode {
 
     @Override
     public File[] getKeywordFiles() {
-        return new File[]{ new File(getFolder(), "resources/keywords.txt") };
+        File f = new File(getFolder(), "resources/keywords.txt");
+        try { new java.io.FileWriter("/tmp/schememode-debug.txt", true).append("[SCM] keywords path: " + f.getAbsolutePath() + " exists=" + f.exists() + "\n").close(); } catch (Exception _e) {}
+        return new File[]{ f };
     }
 
     public String getPythonExecutable() {
