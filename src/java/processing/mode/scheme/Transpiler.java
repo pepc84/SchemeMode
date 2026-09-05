@@ -132,6 +132,13 @@ public class Transpiler {
         emit("def text_width(*args): return 0  # not yet in mewnala\n");
         emit("def text_ascent(*args): return 0  # not yet in mewnala\n");
         emit("def text_descent(*args): return 0  # not yet in mewnala\n\n");
+        emit("# Scheme list primitives\n");
+        emit("def car(p): return p[0]\n");
+        emit("def cdr(p): return p[1:]\n");
+        emit("def cons(h, t): return [h] + list(t)\n");
+        emit("def is_null(p): return p == [] or p == ()\n");
+        emit("def is_pair(p): return isinstance(p, (list, tuple)) and len(p) > 0\n");
+        emit("def is_list(p): return isinstance(p, (list, tuple))\n\n");
 
         for (SExpr f : forms) {
             if (f.isForm("import")) continue;
@@ -875,6 +882,14 @@ public class Transpiler {
         return sb.toString();
     }
 
+    private static final java.util.Set<String> PY_RESERVED = java.util.Set.of(
+        "False","None","True","and","as","assert","async","await",
+        "break","class","continue","def","del","elif","else","except",
+        "finally","for","from","global","if","import","in","is",
+        "lambda","nonlocal","not","or","pass","raise","return",
+        "try","while","with","yield"
+    );
+
     static String snake(String name) {
         if (name == null) return "_";
         // Normalize camelCase to kebab-case first (mouseX -> mouse-x)
@@ -889,6 +904,15 @@ public class Transpiler {
                 if (s.endsWith("?")) s = s.substring(0, s.length()-1) + "_p";
                 if (s.endsWith("!")) s = s.substring(0, s.length()-1);
                 if (s.startsWith("#")) s = s.substring(1);
+                // Mangle Python reserved words
+                switch (s) {
+                    case "False","None","True","and","as","assert","async","await",
+                         "break","class","continue","def","del","elif","else","except",
+                         "finally","for","from","global","if","import","in","is",
+                         "lambda","nonlocal","not","or","pass","raise","return",
+                         "try","while","with","yield" -> s = "_" + s;
+                    default -> {}
+                }
                 yield s;
             }
         };

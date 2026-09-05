@@ -14,69 +14,80 @@ def random_gaussian(): return _random.gauss(0, 1)
 
 def noise(*args): return _random.random()
 
+def text(*args): pass  # not yet in mewnala
+def text_size(*args): pass  # not yet in mewnala
+def text_align(*args): pass  # not yet in mewnala
+def text_leading(*args): pass  # not yet in mewnala
+def text_width(*args): return 0  # not yet in mewnala
+def text_ascent(*args): return 0  # not yet in mewnala
+def text_descent(*args): return 0  # not yet in mewnala
+
 # scm:3
 ps = []
 
 # scm:5
 def make_p(x, y):
     # scm:6
-    return [x, y, (-random(-3.0, 3.0)), random(-4.0, -0.5), random(40.0, 80.0)]
+    return [x, y, random(-2.0, 2.0), random(-4.0, -0.5), random(40.0, 80.0)]
 
 # scm:8
 def p_x(p):
     return (p)[0]
 
+# scm:9
 def p_y(p):
     return (p)[1]
 
-# scm:9
+# scm:10
 def p_vx(p):
     return (p)[2]
 
+# scm:11
 def p_vy(p):
     return (p)[3]
 
-# scm:10
+# scm:12
 def p_life(p):
     return (p)[4]
 
-# scm:11
+# scm:13
 def p_alive_p(p):
     return (p_life(p) > 0)
 
-# scm:12
+# scm:15
 def p_update(p):
-    # scm:13
+    # scm:16
     return [(p_x(p) + p_vx(p)), (p_y(p) + p_vy(p) + 0.1), p_vx(p), (p_vy(p) + 0.12), (p_life(p) - 1)]
 
-# scm:15
+# scm:22
 def p_draw(p):
-    # scm:16
-    return (lambda a: circle(p_x(p), p_y(p), 8))(((p_life(p) / 80.0) * 220))
+    # scm:23
+    return (lambda a: [fill(255, 160, 60, a), no_stroke(), circle(p_x(p), p_y(p), 8)][-1])(((p_life(p) / 80.0) * 220))
 
-# scm:19
+# scm:28
 def setup():
     size(800, 600)
 
-# scm:21
+# scm:30
 def draw():
     global ps
-    # scm:22
+    # scm:31
     background(10, 10, 20, 30)
-    # scm:23
+    # scm:32
     ps = ([make_p(mouse_x, mouse_y)] + ps)
-    # scm:24
+    # scm:33
     ps = list(filter(p_alive_p, list(map(p_update, ps))))
-    # scm:25
+    # scm:34
     for _fi in ps:
         p_draw(_fi)
 
-# scm:27
+# scm:36
 def mouse_pressed():
     global ps
-    # scm:28
+    # scm:37
     def loop(i):
-        # scm:29
+        global ps
+        # scm:38
         if (i < 15):
             ps = ([make_p(mouse_x, mouse_y)] + ps)
             loop((i + 1))

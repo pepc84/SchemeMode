@@ -186,50 +186,21 @@ WHITESPACE	LITERAL2
 
 # Java keywords (void, import, , etc.)
 
-abstract	KEYWORD1
-break	KEYWORD1	break
-class	KEYWORD1	class
-continue	KEYWORD1	continue
 default	KEYWORD1	default
 enum	KEYWORD1
-extends	KEYWORD1	extends
-false	KEYWORD1	false
-final	KEYWORD1	final
-finally	KEYWORD1
-implements	KEYWORD1	implements
 import	KEYWORD1	import
-instanceof	KEYWORD1
-interface	KEYWORD1
-native	KEYWORD1
-new	KEYWORD1	new
-null	KEYWORD1	null
 package	KEYWORD1
-private	KEYWORD1	private
-protected	KEYWORD1
-public	KEYWORD1	public
-static	KEYWORD1	static
 strictfp	KEYWORD1
-throws	KEYWORD1
-transient	KEYWORD1
-true	KEYWORD1	true
-void	KEYWORD1	void
-volatile	KEYWORD1
 
 
 # Java keywords that can be followed by a parenthesis
 
 assert	KEYWORD6
 case	KEYWORD6	case
-return	KEYWORD6	return
-super	KEYWORD6	super
-this	KEYWORD6	this
-throw	KEYWORD6
 
 
 # Datatypes
 
-Array	KEYWORD5	Array
-ArrayList	KEYWORD5	ArrayList
 Boolean	KEYWORD5
 Byte	KEYWORD5
 BufferedReader	KEYWORD5	BufferedReader
@@ -237,59 +208,33 @@ Character	KEYWORD5
 Class	KEYWORD5	class
 Float	KEYWORD5
 Integer	KEYWORD5
-HashMap	KEYWORD5	HashMap
 PrintWriter	KEYWORD5	PrintWriter
-String	KEYWORD5	String
 StringBuffer	KEYWORD5
 StringBuilder	KEYWORD5
 Thread	KEYWORD5
-boolean	KEYWORD5	boolean
-byte	KEYWORD5	byte
-char	KEYWORD5	char
 color	KEYWORD5	color_datatype
-double	KEYWORD5	double
-float	KEYWORD5	float
-int	KEYWORD5	int
-long	KEYWORD5	long
-short	KEYWORD5	short
 var	KEYWORD5
 
 
 # Flow structures
 
-catch	KEYWORD3	catch
 do	KEYWORD3
-for	KEYWORD3	for
 if	KEYWORD3	if
 else	KEYWORD3	else
-switch	KEYWORD3	switch
-synchronized	KEYWORD3
-while	KEYWORD3	while
-try	KEYWORD3	try
 
-catch	FUNCTION3	catch
 do	FUNCTION3
-for	FUNCTION3	for
 if	FUNCTION3	if
 #else	FUNCTION3	else
-switch	FUNCTION3	switch
-synchronized	FUNCTION3
-while	FUNCTION3	while
 #try	FUNCTION3	try
 
 
 # These items are a part of Processing but, but pages don't generate
 
-boolean	FUNCTION1	booleanconvert_
-byte	FUNCTION1	byteconvert_
 cache	FUNCTION2
-char	FUNCTION1	charconvert_
 start	FUNCTION1
 stop	FUNCTION1
 breakShape	FUNCTION1
 createPath	FUNCTION1
-float	FUNCTION1	floatconvert_
-int	FUNCTION1	intconvert_
 str	FUNCTION1	strconvert_
 loadMatrix	FUNCTION1
 parseBoolean	FUNCTION1
@@ -371,8 +316,6 @@ length	KEYWORD2	String
 width	KEYWORD4	width_
 height	KEYWORD4	height_
 
-ArrayList	FUNCTION1	ArrayList
-HashMap	FUNCTION1	HashMap
 
 
 # THE TEXT ABOVE IS HAND-WRITTEN AND FOUND IN THE FILE 
@@ -1020,3 +963,5 @@ eqv?	FUNCTION1
 #f	LITERAL1
 #true	LITERAL1
 #false	LITERAL1
+
+import	KEYWORD6
