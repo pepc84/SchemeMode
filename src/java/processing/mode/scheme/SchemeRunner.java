@@ -74,6 +74,9 @@ public class SchemeRunner {
             try (var r = new BufferedReader(new InputStreamReader(is))) {
                 String l;
                 while ((l = r.readLine()) != null) {
+                    if (l.contains("WARN bevy") || l.contains("INFO bevy") ||
+                        l.contains("INFO wgpu") || l.contains("INFO processing_render::sketch: source=") ||
+                        l.contains("WARN wgpu") || l.contains("DEBUG")) continue;
                     System.err.println(l);
                     synchronized (stderrBuf) { stderrBuf.append(l).append("\n"); }
                 }

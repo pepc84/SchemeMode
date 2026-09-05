@@ -148,10 +148,10 @@ public class Transpiler {
         emit("def text_ascent(*args): return 0  # not yet in mewnala\n");
         emit("def text_descent(*args): return 0  # not yet in mewnala\n\n");
         emit("# Scheme list primitives\n");
-        emit("def car(p): return p[0]\n");
-        emit("def cdr(p): return p[1:]\n");
-        emit("def cons(h, t): return [h] + list(t)\n");
-        emit("def is_null(p): return p == [] or p == ()\n");
+        emit("def car(p): return p[0] if isinstance(p, (list, tuple)) else p[0]\n");
+        emit("def cdr(p): return list(p[1:])\n");
+        emit("def cons(h, t): return [h] + (list(t) if isinstance(t, (list, tuple)) else [t])\n");
+        emit("def is_null(p): return p is None or p == [] or p == () or (isinstance(p, (list,tuple)) and len(p)==0)\n");
         emit("def is_pair(p): return isinstance(p, (list, tuple)) and len(p) > 0\n");
         emit("def is_list(p): return isinstance(p, (list, tuple))\n");
         emit("def cadr(p): return p[1]\n");
@@ -802,7 +802,7 @@ public class Transpiler {
             case "negative?"-> { sb.append("("); apE(sb,args.get(0),ind); sb.append(" < 0)"); return sb.toString(); }
             case "even?"    -> { sb.append("("); apE(sb,args.get(0),ind); sb.append(" % 2 == 0)"); return sb.toString(); }
             case "odd?"     -> { sb.append("("); apE(sb,args.get(0),ind); sb.append(" % 2 != 0)"); return sb.toString(); }
-            case "null?","nil?" -> { sb.append("(("); apE(sb,args.get(0),ind); sb.append(") == [])"); return sb.toString(); }
+            case "null?","nil?" -> { sb.append("is_null("); apE(sb,args.get(0),ind); sb.append(")"); return sb.toString(); }
             case "pair?"    -> { sb.append("(isinstance("); apE(sb,args.get(0),ind); sb.append(", list) and len("); apE(sb,args.get(0),ind); sb.append(") > 0)"); return sb.toString(); }
             case "list?"    -> { sb.append("isinstance("); apE(sb,args.get(0),ind); sb.append(", list)"); return sb.toString(); }
             case "number?"  -> { sb.append("isinstance("); apE(sb,args.get(0),ind); sb.append(", (int, float))"); return sb.toString(); }
@@ -1015,6 +1015,7 @@ public class Transpiler {
     }
 
     static String pascal(String name) {
+        name = name.replace("<","").replace(">","");
         StringBuilder sb = new StringBuilder();
         for (String p : name.split("[-_]")) if (!p.isEmpty()) sb.append(Character.toUpperCase(p.charAt(0))).append(p.substring(1));
         return sb.toString();
