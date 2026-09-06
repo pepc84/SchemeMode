@@ -154,6 +154,7 @@ public class Transpiler {
         emit("def is_null(p): return p is None or p == [] or p == () or (isinstance(p, (list,tuple)) and len(p)==0)\n");
         emit("def is_pair(p): return isinstance(p, (list, tuple)) and len(p) > 0\n");
         emit("def is_list(p): return isinstance(p, (list, tuple))\n");
+        emit("def append(*args): return [x for lst in args for x in (lst if isinstance(lst, (list,tuple)) else [lst])]\n");
         emit("def cadr(p): return p[1]\n");
         emit("def caddr(p): return p[2]\n");
         emit("def cadddr(p): return p[3]\n");
