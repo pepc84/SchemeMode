@@ -407,6 +407,42 @@ public class Transpiler {
         }
     }
 
+    private void emitCaseExpr(SExpr.Pair form, int ind) throws SchemeException {
+        List<SExpr> parts = list(form);
+        SExpr key = parts.get(1);
+        List<SExpr> clauses = parts.subList(2, parts.size());
+        emit("(");
+        // emit as nested ternary: val if key in (...) else ...
+        boolean first = true;
+        for (int i = 0; i < clauses.size(); i++) {
+            List<SExpr> clause = list(clauses.get(i));
+            SExpr datums = clause.get(0);
+            SExpr val = clause.get(clause.size()-1);
+            if (datums.isSym("else")) {
+                if (!first) emit(" else ");
+                emitExpr(val, ind);
+            } else {
+                if (!first) emit(" else ");
+                emitExpr(val, ind);
+                emit(" if ");
+                emitExpr(key, ind);
+                emit(" in ");
+                // datums is a list — emit as literals (symbols -> strings, numbers -> numbers)
+                List<SExpr> ds = list(datums);
+                emit("(");
+                for (int j = 0; j < ds.size(); j++) {
+                    if (j > 0) emit(", ");
+                    SExpr d = ds.get(j);
+                    if (d instanceof SExpr.Sym sym) emit("\"" + sym.name() + "\"");
+                    else emitExpr(d, ind);
+                }
+                emit(",)");
+                first = false;
+            }
+        }
+        emit(")");
+    }
+
     private void emitCase(SExpr e, int ind) throws SchemeException {
         indent(ind); emit("_cv = "); emitExpr(nth(e,1), ind); emit("\n");
         List<SExpr> clauses = list(e).subList(2, list(e).size());
@@ -570,6 +606,7 @@ public class Transpiler {
             case "lambda"     -> { emitLambda(pair, ind); return; }
             case "if"         -> { emitIf(pair, ind, false); return; }
             case "cond"       -> { emitCondExpr(pair, ind); return; }
+            case "case"       -> { emitCaseExpr(pair, ind); return; }
             case "and"        -> { emitAndOr(args, ind, "and", "True"); return; }
             case "or"         -> { emitAndOr(args, ind, "or",  "False"); return; }
             case "not"        -> { emit("(not ("); emitExpr(args.get(0), ind); emit("))"); return; }
