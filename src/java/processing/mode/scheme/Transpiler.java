@@ -459,7 +459,7 @@ public class Transpiler {
             }
             emitBody(body, ind+1);
             inFunction = wi; localVars.clear(); localVars.addAll(wl);
-            indent(ind); emit(loopName + "("); emitArgs(inits, ind); emit(")\n");
+            indent(ind); emit("return " + loopName + "("); emitArgs(inits, ind); emit(")\n");
             return;
         }
         // Regular let
@@ -996,9 +996,14 @@ public class Transpiler {
             case "<" -> "_lt"; case ">" -> "_gt"; case "<=" -> "_le"; case ">=" -> "_ge";
             case "=" -> "_eq"; case "!=" -> "_ne";
             default -> {
-                String s = name.replace('-', '_');
+                String s = name.replace("->", "_to_").replace('-', '_');
+                s = s.replace("<", "_lt_").replace(">", "_gt_").replace("=", "_eq_");
+                s = s.replace("!", "").replace("*", "_s_").replace("+", "_plus_");
+                // Clean up multiple/trailing underscores
+                while (s.contains("__")) s = s.replace("__", "_");
+                if (s.endsWith("_")) s = s.substring(0, s.length()-1);
+                if (s.startsWith("_") && s.length() > 1) s = s.substring(1);
                 if (s.endsWith("?")) s = s.substring(0, s.length()-1) + "_p";
-                if (s.endsWith("!")) s = s.substring(0, s.length()-1);
                 if (s.startsWith("#")) s = s.substring(1);
                 // Mangle Python reserved words
                 switch (s) {
