@@ -274,7 +274,8 @@ public class Transpiler {
         }
         SExpr last = body.get(body.size() - 1);
         marker(last.line(), ind);
-        if (!noReturn && !last.isForm("guard") && (isSimple(last) || last.isForm("if") || last.isForm("cond") ||
+        boolean hasNamedLetBranch = last.isForm("if") && containsNamedLet(last);
+        if (!noReturn && !last.isForm("guard") && !hasNamedLetBranch && (isSimple(last) || last.isForm("if") || last.isForm("cond") ||
             last.isForm("let") || last.isForm("let*") || last.isForm("letrec") ||
             last.isForm("and") || last.isForm("or") || last.isForm("begin"))) {
             indent(ind); emit("return "); emitExpr(last, ind); emit("\n");
@@ -530,7 +531,7 @@ public class Transpiler {
             List<SExpr> inits  = new ArrayList<>();
             for (SExpr b : bindings) {
                 List<SExpr> bl = list(b);
-                params.add(snake(sym(bl.get(0))));
+                params.add(snakeBind(sym(bl.get(0))));
                 inits.add(bl.size() > 1 ? bl.get(1) : new SExpr.Nil(b.line()));
             }
             marker(e.line(), ind); indent(ind);
@@ -555,7 +556,7 @@ public class Transpiler {
         List<SExpr> body = parts.subList(2, parts.size());
         for (SExpr b : bindings) {
             List<SExpr> bl = list(b);
-            String varName = snake(sym(bl.get(0)));
+            String varName = snakeBind(sym(bl.get(0)));
             localVars.add(varName);
             marker(b.line(), ind); indent(ind);
             emit(varName + " = ");
@@ -576,8 +577,21 @@ public class Transpiler {
         }
         indent(ind); emit("while True:\n");
         indent(ind+1); emit("if "); emitExpr(term.get(0), ind+1); emit(":\n");
-        if (term.size() > 1) { for (int i = 1; i < term.size(); i++) emitStmt(term.get(i), ind+2); }
-        else { indent(ind+2); emit("break\n"); }
+        if (term.size() > 1) {
+            SExpr lastTerm = term.get(term.size()-1);
+            for (int i = 1; i < term.size() - 1; i++) emitStmt(term.get(i), ind+2);
+            // Only return if last term produces a value (not a mutation)
+            boolean isMutation = lastTerm.isForm("set!") || lastTerm.isForm("vector-set!") ||
+                lastTerm.isForm("set-car!") || lastTerm.isForm("set-cdr!") ||
+                lastTerm.isForm("define") || lastTerm.isForm("for-each") ||
+                lastTerm.isForm("display") || lastTerm.isForm("newline");
+            if (!isMutation && (isSimple(lastTerm) || lastTerm.isForm("if") || lastTerm.isForm("cond") || lastTerm.isForm("let") || lastTerm.isForm("let*"))) {
+                indent(ind+2); emit("return "); emitExpr(lastTerm, ind+2); emit("\n");
+            } else {
+                emitStmt(lastTerm, ind+2);
+                indent(ind+2); emit("break\n");
+            }
+        } else { indent(ind+2); emit("break\n"); }
         for (SExpr b : body) emitStmt(b, ind+1);
         // steps
         List<String> stepVars = new ArrayList<>();
@@ -672,7 +686,6 @@ public class Transpiler {
             case "vector-ref" -> { emitExpr(args.get(0),ind); emit("["); emitExpr(args.get(1),ind); emit("]"); return; }
             case "vector-set!" -> { emitExpr(args.get(0),ind); emit("["); emitExpr(args.get(1),ind); emit("] = "); emitExpr(args.get(2),ind); return; }
             case "vector-length","string-length","length" -> { emit("len("); emitExpr(args.get(0),ind); emit(")"); return; }
-            case "make-vector" -> { emit("[None]*"); emitExpr(args.get(0),ind); return; }
             case "apply"      -> { emitApply(args, ind); return; }
             case "map"        -> { emit("list(map("); emitExpr(args.get(0),ind); for (int i=1;i<args.size();i++){emit(", ");emitExpr(args.get(i),ind);} emit("))"); return; }
             case "filter"     -> { emit("list(filter("); emitExpr(args.get(0),ind); emit(", "); emitExpr(args.get(1),ind); emit("))"); return; }
@@ -759,7 +772,11 @@ public class Transpiler {
     private void emitLetExpr(SExpr.Pair form, int ind) throws SchemeException {
         List<SExpr> parts = list(form);
         String head = sym(parts.get(0));
-        if (parts.get(1) instanceof SExpr.Sym) { emit("None"); return; } // named let in expr pos
+        if (parts.get(1) instanceof SExpr.Sym loopSym2) {
+            // named let in expression position — not easily expressible inline
+            // emit None as placeholder (named let in expr pos should be hoisted to stmt)
+            emit("None"); return;
+        }
         List<SExpr> bindings = list(parts.get(1));
         List<SExpr> body = parts.subList(2, parts.size());
 
@@ -775,7 +792,7 @@ public class Transpiler {
         List<String> is = new ArrayList<>();
         for (SExpr b : bindings) {
             List<SExpr> bl = list(b);
-            ps.add(snake(sym(bl.get(0))));
+            ps.add(snakeBind(sym(bl.get(0))));
             Transpiler sub = subTx(); sub.emitExpr(bl.size()>1 ? bl.get(1) : new SExpr.Nil(0), ind);
             is.add(sub.out.toString());
         }
@@ -806,7 +823,7 @@ public class Transpiler {
             return;
         }
         List<SExpr> bl = list(bindings.get(i));
-        String param = snake(sym(bl.get(0)));
+        String param = snakeBind(sym(bl.get(0)));
         Transpiler sub = subTx(); sub.emitExpr(bl.size()>1 ? bl.get(1) : new SExpr.Nil(0), ind);
         emit("(lambda " + param + ": ");
         emitLetStarExpr(bindings, body, i + 1, ind);
@@ -1025,6 +1042,19 @@ public class Transpiler {
         for (int i=0;i<args.size();i++){if(i>0)sb.append(", ");apE(sb,args.get(i),ind);}
     }
 
+    private boolean containsNamedLet(SExpr e) {
+        if (e.isForm("let") && e instanceof SExpr.Pair p) {
+            List<SExpr> parts = p.toList();
+            return parts.size() > 1 && parts.get(1) instanceof SExpr.Sym;
+        }
+        if (e instanceof SExpr.Pair p) {
+            for (SExpr child : p.toList()) if (containsNamedLet(child)) return true;
+        }
+        return false;
+    }
+
+    
+
     private boolean isSimple(SExpr e) {
         if (!(e instanceof SExpr.Pair)) return true;
         String h = ((SExpr.Pair)e).headSym();
@@ -1095,18 +1125,39 @@ public class Transpiler {
                 if (s.startsWith("_") && s.length() > 1) s = s.substring(1);
                 if (s.endsWith("?")) s = s.substring(0, s.length()-1) + "_p";
                 if (s.startsWith("#")) s = s.substring(1);
-                // Mangle Python reserved words
+                // Mangle Python builtins and reserved words
                 switch (s) {
                     case "False","None","True","and","as","assert","async","await",
                          "break","class","continue","def","del","elif","else","except",
                          "finally","for","from","global","if","import","in","is",
                          "lambda","nonlocal","not","or","pass","raise","return",
                          "try","while","with","yield" -> s = "_" + s;
+                    // never add more here - builtin mangling is in the yield block below
                     default -> {}
                 }
+                if (PY_BUILTINS.contains(s)) s = "_" + s;
                 yield s;
             }
         };
+    }
+
+    private static final java.util.Set<String> PY_BUILTINS = java.util.Set.of(
+        "abs","all","any","ascii","bin","bool","breakpoint","bytearray","bytes",
+        "callable","chr","classmethod","compile","complex","copyright","credits",
+        "delattr","dict","dir","divmod","enumerate","eval","exec","exit","filter",
+        "float","format","frozenset","getattr","globals","hasattr","hash","help",
+        "hex","id","input","int","isinstance","issubclass","iter","len","license",
+        "list","locals","map","max","memoryview","min","next","object","oct","open",
+        "ord","pow","print","property","quit","range","repr","reversed","round",
+        "set","setattr","slice","sorted","staticmethod","str","sum","super","tuple",
+        "type","vars","zip"
+    );
+
+    /** snake() for binding positions — also mangles Python builtins */
+    static String snakeBind(String name) {
+        String s = snake(name);
+        if (PY_BUILTINS.contains(s)) s = "_" + s;
+        return s;
     }
 
     static String pascal(String name) {
