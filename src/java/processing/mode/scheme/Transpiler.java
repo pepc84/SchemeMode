@@ -162,9 +162,9 @@ public class Transpiler {
         emit("def text_ascent(*args): return 0  # not yet in mewnala\n");
         emit("def text_descent(*args): return 0  # not yet in mewnala\n\n");
         emit("# Scheme list primitives\n");
-        emit("def car(p): return p[0] if isinstance(p, (list, tuple)) else p[0]\n");
-        emit("def cdr(p): return list(p[1:])\n");
-        emit("def cons(h, t): return [h] + (list(t) if isinstance(t, (list, tuple)) else [t])\n");
+        emit("def car(p): return p[0]\n");
+        emit("def cdr(p): return p[1] if (isinstance(p, tuple) and len(p)==2 and callable(p[1])) else list(p[1:])\n");
+        emit("def cons(h, t): return (h, t) if callable(t) or not isinstance(t, (list, tuple)) else [h] + list(t)\n");
         emit("def is_null(p): return p is None or p == [] or p == () or (isinstance(p, (list,tuple)) and len(p)==0)\n");
         emit("def is_pair(p): return isinstance(p, (list, tuple)) and len(p) > 0\n");
         emit("def is_list(p): return isinstance(p, (list, tuple))\n");
@@ -949,7 +949,6 @@ public class Transpiler {
     private String listOp(String n, List<SExpr> args, int ind) throws SchemeException {
         StringBuilder sb = new StringBuilder();
         switch (n) {
-            case "cons"   -> { sb.append("(["); apE(sb,args.get(0),ind); sb.append("] + "); apE(sb,args.get(1),ind); sb.append(")"); return sb.toString(); }
             case "car","first"   -> { sb.append("("); apE(sb,args.get(0),ind); sb.append(")[0]"); return sb.toString(); }
             case "cdr","rest"    -> { sb.append("("); apE(sb,args.get(0),ind); sb.append(")[1:]"); return sb.toString(); }
             case "cadr","second" -> { sb.append("("); apE(sb,args.get(0),ind); sb.append(")[1]"); return sb.toString(); }
