@@ -130,7 +130,21 @@ public class Transpiler {
         emit("def number_p(n): return isinstance(n, (int, float))\n");
         emit("def string_p(n): return isinstance(n, str)\n");
         emit("def symbol_p(n): return isinstance(n, str)\n");
-        emit("def procedure_p(n): return callable(n)\n\n");
+        emit("def procedure_p(n): return callable(n)\n");
+        emit("def char_gt_eq__p(a, b): return a >= b\n");
+        emit("def char_lt_eq__p(a, b): return a <= b\n");
+        emit("def char_gt__p(a, b): return a > b\n");
+        emit("def char_lt__p(a, b): return a < b\n");
+        emit("def char_eq__p(a, b): return a == b\n");
+        emit("def char_to_integer(c): return ord(c)\n");
+        emit("def integer_to_char(n): return chr(n)\n");
+        emit("def char_alphabetic_p(c): return c.isalpha()\n");
+        emit("def char_numeric_p(c): return c.isdigit()\n");
+        emit("def char_whitespace_p(c): return c.isspace()\n");
+        emit("def char_upper_case_p(c): return c.isupper()\n");
+        emit("def char_lower_case_p(c): return c.islower()\n");
+        emit("def list_to_string(lst): return ''.join(lst)\n");
+        emit("def string_to_list(s): return list(s)\n\n");
         emit("from mewnala.math import *\n");
         emit("import math as _math\n\n");
         emit("def _err(*a): raise Exception(' '.join(str(x) for x in a))\n\n");
@@ -274,8 +288,9 @@ public class Transpiler {
         }
         SExpr last = body.get(body.size() - 1);
         marker(last.line(), ind);
+        boolean isNamedLet = last.isForm("let") && last instanceof SExpr.Pair lp && lp.toList().size() > 1 && lp.toList().get(1) instanceof SExpr.Sym;
         boolean hasNamedLetBranch = last.isForm("if") && containsNamedLet(last);
-        if (!noReturn && !last.isForm("guard") && !hasNamedLetBranch && (isSimple(last) || last.isForm("if") || last.isForm("cond") ||
+        if (!noReturn && !last.isForm("guard") && !hasNamedLetBranch && !isNamedLet && (isSimple(last) || last.isForm("if") || last.isForm("cond") ||
             last.isForm("let") || last.isForm("let*") || last.isForm("letrec") ||
             last.isForm("and") || last.isForm("or") || last.isForm("begin"))) {
             indent(ind); emit("return "); emitExpr(last, ind); emit("\n");
