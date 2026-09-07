@@ -14,7 +14,8 @@ public class Parser {
     private Parser(List<Tokenizer.Token> tokens) { this.tokens = tokens; }
 
     public static List<SExpr> parse(String source) throws SchemeException {
-        return new Parser(new Tokenizer(source).tokenizeAll()).parseAll();
+        List<SExpr> forms = new Parser(new Tokenizer(source).tokenizeAll()).parseAll();
+        return new MacroExpander().expand(forms);
     }
 
     private List<SExpr> parseAll() throws SchemeException {

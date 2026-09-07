@@ -429,23 +429,22 @@ public class Transpiler {
         List<SExpr> parts = list(form);
         SExpr key = parts.get(1);
         List<SExpr> clauses = parts.subList(2, parts.size());
+        boolean hasElse = clauses.stream().anyMatch(c -> list(c).get(0).isSym("else"));
         emit("(");
-        // emit as nested ternary: val if key in (...) else ...
-        boolean first = true;
+        boolean first2 = true;
         for (int i = 0; i < clauses.size(); i++) {
             List<SExpr> clause = list(clauses.get(i));
             SExpr datums = clause.get(0);
             SExpr val = clause.get(clause.size()-1);
             if (datums.isSym("else")) {
-                if (!first) emit(" else ");
+                if (!first2) emit(" else ");
                 emitExpr(val, ind);
             } else {
-                if (!first) emit(" else ");
+                if (!first2) emit(" else ");
                 emitExpr(val, ind);
                 emit(" if ");
                 emitExpr(key, ind);
                 emit(" in ");
-                // datums is a list — emit as literals (symbols -> strings, numbers -> numbers)
                 List<SExpr> ds = list(datums);
                 emit("(");
                 for (int j = 0; j < ds.size(); j++) {
@@ -455,9 +454,10 @@ public class Transpiler {
                     else emitExpr(d, ind);
                 }
                 emit(",)");
-                first = false;
+                first2 = false;
             }
         }
+        if (!hasElse) emit(" else None");
         emit(")");
     }
 
