@@ -674,8 +674,8 @@ public class Transpiler {
 
     private void emitSym(SExpr.Sym sym) {
         String n = sym.name();
-        if (CONST.containsKey(n.toUpperCase())) { emit(CONST.get(n.toUpperCase())); return; }
-        if (CONST.containsKey(n)) { emit(CONST.get(n)); return; }
+        // Only use CONST for uppercase identifiers (Processing constants)
+        if (n.equals(n.toUpperCase()) && CONST.containsKey(n)) { emit(CONST.get(n)); return; }
         if (DYNATTR.containsKey(n)) { emit(DYNATTR.get(n)); return; }
         emit(snake(n));
     }
@@ -859,7 +859,7 @@ public class Transpiler {
     }
 
     private void emitApply(List<SExpr> args, int ind) throws SchemeException {
-        emitExpr(args.get(0), ind); emit("(*("
+        emitExpr(args.get(0), ind); emit("(*(");
         if (args.size() == 2) emitExpr(args.get(1), ind);
         else { emit("["); emitArgs(args.subList(1, args.size()-1), ind); emit("] + list("); emitExpr(args.get(args.size()-1), ind); emit(")"); }
         emit("))");
