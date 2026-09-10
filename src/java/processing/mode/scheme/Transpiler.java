@@ -122,6 +122,14 @@ public class Transpiler {
         emit("_div = _op.truediv; _mod = _op.mod; _pow = _op.pow\n");
         emit("_lt = _op.lt; _gt = _op.gt; _le = _op.le; _ge = _op.ge\n");
         emit("_eq = _op.eq; _ne = _op.ne\n");
+        emit("import functools as _ft\n");
+        emit("_add = lambda *a: sum(a) if len(a)>2 else _op.add(*a)\n");
+        emit("_mul = lambda *a: _ft.reduce(_op.mul, a) if len(a)>2 else _op.mul(*a)\n");
+        emit("_sub = lambda *a: _ft.reduce(_op.sub, a) if len(a)>2 else _op.sub(*a)\n");
+        emit("_min = lambda *a: min(a)\n");
+        emit("_max = lambda *a: max(a)\n");
+        emit("import functools as _ft\n");
+        emit("def _apply_op(op, args): return _ft.reduce(op, args)\n");
         emit("def even_p(n): return n % 2 == 0\n");
         emit("def odd_p(n): return n % 2 != 0\n");
         emit("def zero_p(n): return n == 0\n");
@@ -851,7 +859,7 @@ public class Transpiler {
     }
 
     private void emitApply(List<SExpr> args, int ind) throws SchemeException {
-        emitExpr(args.get(0), ind); emit("(*(");
+        emitExpr(args.get(0), ind); emit("(*("
         if (args.size() == 2) emitExpr(args.get(1), ind);
         else { emit("["); emitArgs(args.subList(1, args.size()-1), ind); emit("] + list("); emitExpr(args.get(args.size()-1), ind); emit(")"); }
         emit("))");
