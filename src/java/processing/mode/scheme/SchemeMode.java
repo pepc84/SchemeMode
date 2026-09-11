@@ -6,7 +6,10 @@ import java.io.File;
 
 public class SchemeMode extends Mode {
 
-    public SchemeMode(Base base, File folder) { super(base, folder); }
+    public SchemeMode(Base base, File folder) {
+        super(base, folder);
+        try { new java.io.FileWriter(System.getProperty("user.home") + "/scheme-debug.txt",true).append("SchemeMode constructor called\n").close(); } catch(Exception _e) { System.err.println("DEBUG WRITE FAILED: " + _e); }
+    }
 
     @Override public String   getTitle()            { return "Scheme"; }
     @Override public String   getDefaultExtension() { return "scm"; }
@@ -44,6 +47,7 @@ public class SchemeMode extends Mode {
 
     @Override
     protected processing.app.syntax.TokenMarker createTokenMarker() {
+        try { java.nio.file.Files.write(java.nio.file.Paths.get(System.getProperty("user.home"), "scheme-debug.txt"), ("createTokenMarker called\n" + "\n").getBytes(), java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND); } catch(Exception _dbge){}
         return new TsSchemeTokenMarker();
     }
 
