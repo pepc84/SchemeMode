@@ -15,6 +15,7 @@ repositories { mavenCentral() }
 dependencies {
     // processing.app.* lives in java/build/libs/java*.jar
     compileOnly(fileTree("$p4/java/build/libs") { include("java*.jar") })
+    compileOnly(fileTree("/home/pep/sketchbook/modes/CppMode/mode") { include("java-tree-sitter*.jar", "commons-collections4*.jar", "commons-io*.jar", "slf4j*.jar") })
     // app.jar has Base, Editor, Mode etc.
     compileOnly(fileTree("$p4/app/build/libs") { include("app*.jar") })
     // core
@@ -35,6 +36,9 @@ tasks.register("install") {
     doLast {
         copy { from(tasks.jar.get().archiveFile); into("$modeDir/mode") }
         copy { from("mode.properties"); into(modeDir) }
+        copy { from("resources"); into("$modeDir/resources") }
+        copy { from("resources/queries"); into("$modeDir/queries") }
+        copy { from("libs"); into("$modeDir/libs") }
         println("Installed to $modeDir")
     }
 }

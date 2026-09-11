@@ -44,7 +44,7 @@ public class SchemeMode extends Mode {
 
     @Override
     protected processing.app.syntax.TokenMarker createTokenMarker() {
-        return new SchemeTokenMarker();
+        return new TsSchemeTokenMarker();
     }
 
     @Override
